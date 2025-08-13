@@ -1,51 +1,37 @@
-import os
-import sys
-# DON'T CHANGE THIS !!!
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from flask import Flask, send_from_directory
-from flask_cors import CORS
-from src.models.user import db
-from src.routes.user import user_bp
+# Rotas para FAQs
+@app.route('/api/faqs', methods=['GET'])
+def get_faqs():
+    return jsonify(faqs)
 
-app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+@app.route('/api/faqs', methods=['POST'])
+def create_faq():
+    data = request.json
+    faq = {
+        'id': len(faqs) + 1,
+        'question': data.get('question', ''),
+        'answer': data.get('answer', ''),
+        'category': data.get('category', '')
+    }
+    faqs.append(faq)
+    return jsonify(faq), 201
 
-# Enable CORS for all routes
-CORS(app)
+@app.route('/api/faqs/<int:faq_id>', methods=['PUT'])
+def update_faq(faq_id):
+    data = request.json
+    for faq in faqs:
+        if faq['id'] == faq_id:
+            faq.update(data)
+            return jsonify(faq)
+    return jsonify({'error': 'FAQ not found'}), 404
 
-app.register_blueprint(user_bp, url_prefix='/api')
-
-# Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
-with app.app_context():
-    db.create_all()
-
-@app.route("/admin.html")
-def serve_admin():
-    return send_from_directory(app.static_folder, "admin.html")
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    static_folder_path = app.static_folder
-    if static_folder_path is None:
-            return "Static folder not configured", 404
-
-    if path == "":
-        return send_from_directory(static_folder_path, "admin.html")
-    elif path != "" and os.path.exists(os.path.join(static_folder_path, path)):
-        return send_from_directory(static_folder_path, path)
-    else:
-        index_path = os.path.join(static_folder_path, 'index.html')
-        if os.path.exists(index_path):
-            return send_from_directory(static_folder_path, 'index.html')
-        else:
-            return "index.html not found", 404
-
+@app.route('/api/faqs/<int:faq_id>', methods=['DELETE'])
+def delete_faq(faq_id):
+    global faqs
+    faqs = [faq for faq in faqs if faq['id'] != faq_id]
+    return jsonify({'message': 'FAQ deleted'})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
 
