@@ -39,7 +39,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>Blogs</h2>
-                <button onclick="openModal(\'blog\')">+ Novo Blog</button>
+                <button onclick="window.openModal(\'blog\')">+ Novo Blog</button>
             </div>
             <ul id="blog-list" class="item-list"></ul>
         </div>
@@ -48,7 +48,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>Vídeos</h2>
-                <button onclick="openModal(\'video\')">+ Novo Vídeo</button>
+                <button onclick="window.openModal(\'video\')">+ Novo Vídeo</button>
             </div>
             <ul id="video-list" class="item-list"></ul>
         </div>
@@ -57,7 +57,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>Cursos/E-books</h2>
-                <button onclick="openModal(\'course_ebook\')">+ Novo Curso/E-book</button>
+                <button onclick="window.openModal(\'course_ebook\')">+ Novo Curso/E-book</button>
             </div>
             <ul id="course_ebook-list" class="item-list"></ul>
         </div>
@@ -66,7 +66,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>Depoimentos</h2>
-                <button onclick="openModal(\'testimonial\')">+ Novo Depoimento</button>
+                <button onclick="window.openModal(\'testimonial\')">+ Novo Depoimento</button>
             </div>
             <ul id="testimonial-list" class="item-list"></ul>
         </div>
@@ -75,7 +75,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>Equipe</h2>
-                <button onclick="openModal(\'team_member\')">+ Novo Membro</button>
+                <button onclick="window.openModal(\'team_member\')">+ Novo Membro</button>
             </div>
             <ul id="team_member-list" class="item-list"></ul>
         </div>
@@ -84,7 +84,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>FAQs</h2>
-                <button onclick="openModal(\'faq\')">+ Nova FAQ</button>
+                <button onclick="window.openModal(\'faq\')">+ Nova FAQ</button>
             </div>
             <ul id="faq-list" class="item-list"></ul>
         </div>
@@ -168,13 +168,13 @@
                     case \'team_member\': displayText = item.name; break;
                     case \'faq\': displayText = item.question; break;
                 }
-                li.innerHTML = `\n                    <span>${displayText}</span>\n                    <div>\n                        <button class=\"edit-button\" onclick=\"editItem(\'${entityType}\', ${item.id})\">Editar</button>\n                        <button onclick=\"deleteItem(\'${entityType}\', ${item.id})\">Excluir</button>\n                    </div>\n                `;
+                li.innerHTML = `\n                    <span>${displayText}</span>\n                    <div>\n                        <button class=\"edit-button\" onclick=\"window.editItem(\'${entityType}\', ${item.id})\">Editar</button>\n                        <button onclick=\"window.deleteItem(\'${entityType}\', ${item.id})\">Excluir</button>\n                    </div>\n                `;
                 listElement.appendChild(li);
             });
         }
 
         // Funções do Modal
-        function openModal(entityType, item = null) {
+        window.openModal = function(entityType, item = null) {
             currentEntityType = entityType;
             currentEditId = item ? item.id : null;
             const modal = document.getElementById(\'myModal\');
@@ -269,25 +269,25 @@
             });
 
             modal.style.display = \'block\';
-        }
+        };
 
-        async function editItem(entityType, id) {
+        window.editItem = async function(entityType, id) {
             const item = await (await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`)).json();
-            openModal(entityType, item);
-        }
+            window.openModal(entityType, item);
+        };
 
-        async function deleteItem(entityType, id) {
+        window.deleteItem = async function(entityType, id) {
             if (confirm(\'Tem certeza que deseja excluir este item?\')) {
                 await deleteData(entityType, id);
                 renderAllLists();
             }
-        }
+        };
 
-        function closeModal() {
+        window.closeModal = function() {
             document.getElementById(\'myModal\').style.display = \'none\';
             document.getElementById(\'modal-form\').reset();
             currentEditId = null;
-        }
+        };
 
         document.getElementById(\'modal-form\').addEventListener(\'submit\', async (event) => {
             event.preventDefault();
@@ -302,7 +302,7 @@
             } else {
                 await addData(currentEntityType, data);
             }
-            closeModal();
+            window.closeModal();
             renderAllLists();
         });
 
@@ -323,4 +323,5 @@
     </script>
 </body>
 </html>
+
 
