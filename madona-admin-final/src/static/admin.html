@@ -15,6 +15,7 @@
         .item-list { list-style: none; padding: 0; }
         .item-list li { background: #e9ecef; margin-bottom: 10px; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
         .item-list li button { background-color: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 5px; }
+        .item-list li button:hover { background-color: #c82333; }
         .item-list li .edit-button { background-color: #007bff; }
         .item-list li .edit-button:hover { background-color: #0056b3; }
         .form-group { margin-bottom: 15px; }
@@ -106,8 +107,20 @@
 
     <script>
         const API_BASE_URL = window.location.origin;
-        let currentEntityType = \'\';
+        let currentEntityType = '';
         let currentEditId = null;
+
+        // Função para carregar o status da API
+        async function loadApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/status`);
+                const data = await response.json();
+                document.getElementById('api-status').innerText = data.status;
+            } catch (error) {
+                console.error('Erro ao carregar status da API:', error);
+                document.getElementById('api-status').innerText = 'Erro ao carregar status.';
+            }
+        }
 
         // Funções de CRUD genéricas
         async function fetchData(entityType) {
@@ -117,8 +130,8 @@
 
         async function addData(entityType, data) {
             const response = await fetch(`${API_BASE_URL}/api/${entityType}s`, {
-                method: \'POST\',
-                headers: { \'Content-Type\': \'application/json\' },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
             return response.json();
@@ -126,8 +139,8 @@
 
         async function updateData(entityType, id, data) {
             const response = await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`, {
-                method: \'PUT\',
-                headers: { \'Content-Type\': \'application/json\' },
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
             return response.json();
@@ -135,187 +148,175 @@
 
         async function deleteData(entityType, id) {
             await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`, {
-                method: \'DELETE\'
+                method: 'DELETE'
             });
         }
 
         // Funções para renderizar listas
         async function renderList(entityType) {
             const listElement = document.getElementById(`${entityType}-list`);
-            listElement.innerHTML = \'\';
+            listElement.innerHTML = '';
             const items = await fetchData(entityType);
             items.forEach(item => {
-                const li = document.createElement(\'li\');
-                let displayText = \'\';
+                const li = document.createElement('li');
+                let displayText = '';
                 switch (entityType) {
-                    case \'blog\': displayText = item.title; break;
-                    case \'video\': displayText = item.title; break;
-                    case \'course_ebook\': displayText = item.title; break;
-                    case \'testimonial\': displayText = item.author; break;
-                    case \'team_member\': displayText = item.name; break;
-                    case \'faq\': displayText = item.question; break;
+                    case 'blog': displayText = item.title; break;
+                    case 'video': displayText = item.title; break;
+                    case 'course_ebook': displayText = item.title; break;
+                    case 'testimonial': displayText = item.author; break;
+                    case 'team_member': displayText = item.name; break;
+                    case 'faq': displayText = item.question; break;
                 }
-                li.innerHTML = `\n                    <span>${displayText}</span>\n                    <div>\n                        <button class=\"edit-button\" onclick=\"editItem(\'${entityType}\', ${item.id})\">Editar</button>\n                        <button onclick=\"deleteItem(\'${entityType}\', ${item.id})\">Excluir</button>\n                    </div>\n                `;
+                li.innerHTML = `\n                    <span>${displayText}</span>\n                    <div>\n                        <button class="edit-button" onclick="editItem('${entityType}', ${item.id})">Editar</button>\n                        <button onclick="deleteItem('${entityType}', ${item.id})">Excluir</button>\n                    </div>\n                `;
                 listElement.appendChild(li);
             });
         }
 
+        // Funções do Modal
+        function openModal(entityType, item = null) {
+            currentEntityType = entityType;
+            currentEditId = item ? item.id : null;
+            const modal = document.getElementById('myModal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalForm = document.getElementById('modal-form');
+            const submitButton = document.getElementById('submit-button');
+
+            modalForm.innerHTML = ''; // Limpa formulário anterior
+
+            let fields = [];
+            switch (entityType) {
+                case 'blog':
+                    modalTitle.innerText = item ? 'Editar Blog' : 'Novo Blog';
+                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Blog';
+                    fields = [
+                        { name: 'title', label: 'Título', type: 'text', required: true },
+                        { name: 'content', label: 'Conteúdo', type: 'textarea', required: true }
+                    ];
+                    break;
+                case 'video':
+                    modalTitle.innerText = item ? 'Editar Vídeo' : 'Novo Vídeo';
+                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Vídeo';
+                    fields = [
+                        { name: 'title', label: 'Título', type: 'text', required: true },
+                        { name: 'description', label: 'Descrição', type: 'textarea', required: false },
+                        { name: 'url', label: 'URL do Vídeo', type: 'url', required: true },
+                        { name: 'duration', label: 'Duração (minutos)' , type: 'number', required: false }
+                    ];
+                    break;
+                case 'course_ebook':
+                    modalTitle.innerText = item ? 'Editar Curso/E-book' : 'Novo Curso/E-book';
+                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Curso/E-book';
+                    fields = [
+                        { name: 'title', label: 'Título', type: 'text', required: true },
+                        { name: 'description', label: 'Descrição', type: 'textarea', required: false },
+                        { name: 'price', label: 'Preço', type: 'number', required: false },
+                        { name: 'file_url', label: 'URL do Arquivo', type: 'url', required: false }
+                    ];
+                    break;
+                case 'testimonial':
+                    modalTitle.innerText = item ? 'Editar Depoimento' : 'Novo Depoimento';
+                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Depoimento';
+                    fields = [
+                        { name: 'author', label: 'Autor', type: 'text', required: true },
+                        { name: 'text', label: 'Texto do Depoimento', type: 'textarea', required: true }
+                    ];
+                    break;
+                case 'team_member':
+                    modalTitle.innerText = item ? 'Editar Membro da Equipe' : 'Novo Membro da Equipe';
+                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Membro';
+                    fields = [
+                        { name: 'name', label: 'Nome', type: 'text', required: true },
+                        { name: 'role', label: 'Cargo', type: 'text', required: true },
+                        { name: 'bio', label: 'Bio', type: 'textarea', required: false },
+                        { name: 'image_url', label: 'URL da Imagem', type: 'url', required: false }
+                    ];
+                    break;
+                case 'faq':
+                    modalTitle.innerText = item ? 'Editar FAQ' : 'Nova FAQ';
+                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar FAQ';
+                    fields = [
+                        { name: 'question', label: 'Pergunta', type: 'text', required: true },
+                        { name: 'answer', label: 'Resposta', type: 'textarea', required: true }
+                    ];
+                    break;
+            }
+
+            fields.forEach(field => {
+                const formGroup = document.createElement('div');
+                formGroup.classList.add('form-group');
+                const label = document.createElement('label');
+                label.setAttribute('for', field.name);
+                label.innerText = field.label;
+                formGroup.appendChild(label);
+
+                let inputElement;
+                if (field.type === 'textarea') {
+                    inputElement = document.createElement('textarea');
+                    inputElement.rows = 5;
+                } else {
+                    inputElement = document.createElement('input');
+                    inputElement.type = field.type;
+                }
+                inputElement.id = field.name;
+                inputElement.name = field.name;
+                inputElement.required = field.required;
+                if (item) {
+                    inputElement.value = item[field.name] !== undefined ? item[field.name] : '';
+                }
+                formGroup.appendChild(inputElement);
+                modalForm.insertBefore(formGroup, submitButton.parentNode);
+            });
+
+            modal.style.display = 'block';
+        };
+
+        async function editItem(entityType, id) {
+            const item = await (await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`)).json();
+            openModal(entityType, item);
+        };
+
+        async function deleteItem(entityType, id) {
+            if (confirm('Tem certeza que deseja excluir este item?')) {
+                await deleteData(entityType, id);
+                renderAllLists();
+            }
+        };
+
+        function closeModal() {
+            document.getElementById('myModal').style.display = 'none';
+            document.getElementById('modal-form').reset();
+            currentEditId = null;
+        };
+
+        document.getElementById('modal-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            if (currentEditId) {
+                await updateData(currentEntityType, currentEditId, data);
+            } else {
+                await addData(currentEntityType, data);
+            }
+            closeModal();
+            renderAllLists();
+        });
+
         async function renderAllLists() {
-            await renderList(\'blog\');
-            await renderList(\'video\');
-            await renderList(\'course_ebook\');
-            await renderList(\'testimonial\');
-            await renderList(\'team_member\');
-            await renderList(\'faq\');
+            await renderList('blog');
+            await renderList('video');
+            await renderList('course_ebook');
+            await renderList('testimonial');
+            await renderList('team_member');
+            await renderList('faq');
         }
 
         // Inicialização
         window.onload = async () => {
-            // Função para carregar o status da API
-            async function loadApiStatus() {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/status`);
-                    const data = await response.json();
-                    document.getElementById(\'api-status\').innerText = data.status;
-                } catch (error) {
-                    console.error(\'Erro ao carregar status da API:\', error);
-                    document.getElementById(\'api-status\').innerText = \'Erro ao carregar status.\';
-                }
-            }
-
-            // Funções do Modal
-            window.openModal = function(entityType, item = null) {
-                currentEntityType = entityType;
-                currentEditId = item ? item.id : null;
-                const modal = document.getElementById(\'myModal\');
-                const modalTitle = document.getElementById(\'modal-title\');
-                const modalForm = document.getElementById(\'modal-form\');
-                const submitButton = document.getElementById(\'submit-button\');
-
-                modalForm.innerHTML = \'\'; // Limpa formulário anterior
-
-                let fields = [];
-                switch (entityType) {
-                    case \'blog\':
-                        modalTitle.innerText = item ? \'Editar Blog\' : \'Novo Blog\';
-                        submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Blog\';
-                        fields = [
-                            { name: \'title\', label: \'Título\', type: \'text\', required: true },
-                            { name: \'content\', label: \'Conteúdo\', type: \'textarea\', required: true }
-                        ];
-                        break;
-                    case \'video\':
-                        modalTitle.innerText = item ? \'Editar Vídeo\' : \'Novo Vídeo\';
-                        submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Vídeo\';
-                        fields = [
-                            { name: \'title\', label: \'Título\', type: \'text\', required: true },
-                            { name: \'description\', label: \'Descrição\', type: \'textarea\', required: false },
-                            { name: \'url\', label: \'URL do Vídeo\', type: \'url\', required: true },
-                            { name: \'duration\', label: \'Duração (minutos)\' , type: \'number\', required: false }
-                        ];
-                        break;
-                    case \'course_ebook\':
-                        modalTitle.innerText = item ? \'Editar Curso/E-book\' : \'Novo Curso/E-book\';
-                        submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Curso/E-book\';
-                        fields = [
-                            { name: \'title\', label: \'Título\', type: \'text\', required: true },
-                            { name: \'description\', label: \'Descrição\', type: \'textarea\', required: false },
-                            { name: \'price\', label: \'Preço\', type: \'number\', required: false },
-                            { name: \'file_url\', label: \'URL do Arquivo\', type: \'url\', required: false }
-                        ];
-                        break;
-                    case \'testimonial\':
-                        modalTitle.innerText = item ? \'Editar Depoimento\' : \'Novo Depoimento\';
-                        submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Depoimento\';
-                        fields = [
-                            { name: \'author\', label: \'Autor\', type: \'text\', required: true },
-                            { name: \'text\', label: \'Texto do Depoimento\', type: \'textarea\', required: true }
-                        ];
-                        break;
-                    case \'team_member\':
-                        modalTitle.innerText = item ? \'Editar Membro da Equipe\' : \'Novo Membro da Equipe\';
-                        submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Membro\';
-                        fields = [
-                            { name: \'name\', label: \'Nome\', type: \'text\', required: true },
-                            { name: \'role\', label: \'Cargo\', type: \'text\', required: true },
-                            { name: \'bio\', label: \'Bio\', type: \'textarea\', required: false },
-                            { name: \'image_url\', label: \'URL da Imagem\', type: \'url\', required: false }
-                        ];
-                        break;
-                    case \'faq\':
-                        modalTitle.innerText = item ? \'Editar FAQ\' : \'Nova FAQ\';
-                        submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar FAQ\';
-                        fields = [
-                            { name: \'question\', label: \'Pergunta\', type: \'text\', required: true },
-                            { name: \'answer\', label: \'Resposta\', type: \'textarea\', required: true }
-                        ];
-                        break;
-                }
-
-                fields.forEach(field => {
-                    const formGroup = document.createElement(\'div\');
-                    formGroup.classList.add(\'form-group\');
-                    const label = document.createElement(\'label\');
-                    label.setAttribute(\'for\', field.name);
-                    label.innerText = field.label;
-                    formGroup.appendChild(label);
-
-                    let inputElement;
-                    if (field.type === \'textarea\') {
-                        inputElement = document.createElement(\'textarea\');
-                        inputElement.rows = 5;
-                    } else {
-                        inputElement = document.createElement(\'input\');
-                        inputElement.type = field.type;
-                    }
-                    inputElement.id = field.name;
-                    inputElement.name = field.name;
-                    inputElement.required = field.required;
-                    if (item) {
-                        inputElement.value = item[field.name] !== undefined ? item[field.name] : \'\';
-                    }
-                    formGroup.appendChild(inputElement);
-                    modalForm.insertBefore(formGroup, submitButton.parentNode);
-                });
-
-                modal.style.display = \'block\';
-            };
-
-            window.editItem = async function(entityType, id) {
-                const item = await (await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`)).json();
-                window.openModal(entityType, item);
-            };
-
-            window.deleteItem = async function(entityType, id) {
-                if (confirm(\'Tem certeza que deseja excluir este item?\')) {
-                    await deleteData(entityType, id);
-                    renderAllLists();
-                }
-            };
-
-            window.closeModal = function() {
-                document.getElementById(\'myModal\').style.display = \'none\';
-                document.getElementById(\'modal-form\').reset();
-                currentEditId = null;
-            };
-
-            document.getElementById(\'modal-form\').addEventListener(\'submit\', async (event) => {
-                event.preventDefault();
-                const formData = new FormData(event.target);
-                const data = {};
-                formData.forEach((value, key) => {
-                    data[key] = value;
-                });
-
-                if (currentEditId) {
-                    await updateData(currentEntityType, currentEditId, data);
-                } else {
-                    await addData(currentEntityType, data);
-                }
-                window.closeModal();
-                renderAllLists();
-            });
-
             await loadApiStatus();
             await renderAllLists();
         };
