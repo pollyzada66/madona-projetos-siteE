@@ -117,7 +117,7 @@ class FAQ(db.Model):
 # Rotas da API
 @app.route('/')
 def index():
-    return send_from_directory(app.static_folder, 'admin.html')
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'admin.html')
 
 @app.route('/api/status')
 def status():
