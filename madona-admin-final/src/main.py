@@ -119,6 +119,10 @@ class FAQ(db.Model):
 def index():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'admin.html')
 
+@app.route('/admin.html')
+def admin_html():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'admin.html')
+
 @app.route('/api/status')
 def status():
     return jsonify({'status': 'Painel de Administração com DB SQLite Online!'})
@@ -199,7 +203,7 @@ def add_course_ebook():
     db.session.commit()
     return jsonify(new_ce.to_dict()), 201
 
-@app.route('/api/courses_ebooks/<int:ce_id>', methods=['PUT'])
+@app.route('/api/courses_ebooks', methods=['PUT'])
 def update_course_ebook(ce_id):
     ce = CourseEbook.query.get_or_404(ce_id)
     data = request.json
