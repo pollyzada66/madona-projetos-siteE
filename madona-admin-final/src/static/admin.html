@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração Madona Projetos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2 { color: #0056b3; }
+        .section { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .section-header button { background-color: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 1em; }
+        .section-header button:hover { background-color: #218838; }
+        .item-list { list-style: none; padding: 0; }
+        .item-list li { background: #e9ecef; margin-bottom: 10px; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .item-list li button { background-color: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 5px; }
+        .item-list li button:hover { background-color: #c82333; }
+        .item-list li .edit-button { background-color: #007bff; }
+        .item-list li .edit-button:hover { background-color: #0056b3; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input[type="text"], .form-group input[type="url"], .form-group input[type="number"], .form-group textarea { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-actions { text-align: right; }
+        .form-actions button { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1em; }
+        .form-actions button:hover { background-color: #0056b3; }
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; border-radius: 8px; position: relative; }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Painel de Administração Madona Projetos</h1>
+        <p>Status da API: <span id="api-status">A carregar...</span></p>
+
+        <!-- Seção de Blogs -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Blogs</h2>
+                <button onclick="openModal(\'blog\')">+ Novo Blog</button>
+            </div>
+            <ul id="blog-list" class="item-list"></ul>
+        </div>
+
+        <!-- Seção de Vídeos -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Vídeos</h2>
+                <button onclick="openModal(\'video\')">+ Novo Vídeo</button>
+            </div>
+            <ul id="video-list" class="item-list"></ul>
+        </div>
+
+        <!-- Seção de Cursos/E-books -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Cursos/E-books</h2>
+                <button onclick="openModal(\'course_ebook\')">+ Novo Curso/E-book</button>
+            </div>
+            <ul id="course_ebook-list" class="item-list"></ul>
+        </div>
+
+        <!-- Seção de Depoimentos -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Depoimentos</h2>
+                <button onclick="openModal(\'testimonial\')">+ Novo Depoimento</button>
+            </div>
+            <ul id="testimonial-list" class="item-list"></ul>
+        </div>
+
+        <!-- Seção de Equipe -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Equipe</h2>
+                <button onclick="openModal(\'team_member\')">+ Novo Membro</button>
+            </div>
+            <ul id="team_member-list" class="item-list"></ul>
+        </div>
+
+        <!-- Seção de FAQs -->
+        <div class="section">
+            <div class="section-header">
+                <h2>FAQs</h2>
+                <button onclick="openModal(\'faq\')">+ Nova FAQ</button>
+            </div>
+            <ul id="faq-list" class="item-list"></ul>
+        </div>
+
+    </div>
+
+    <!-- Modal Genérico -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title"></h2>
+            <form id="modal-form">
+                <!-- Campos do formulário serão injetados aqui -->
+                <div class="form-actions">
+                    <button type="submit" id="submit-button"></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let currentEntityType = \'\';
+        let currentEditId = null;
+
+        // Função para carregar o status da API
+        async function loadApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/status`);
+                const data = await response.json();
+                document.getElementById(\'api-status\').innerText = data.status;
+            } catch (error) {
+                console.error(\'Erro ao carregar status da API:\', error);
+                document.getElementById(\'api-status\').innerText = \'Erro ao carregar status.\';
+            }
+        }
+
+        // Funções de CRUD genéricas
+        async function fetchData(entityType) {
+            const response = await fetch(`${API_BASE_URL}/api/${entityType}s`);
+            return response.json();
+        }
+
+        async function addData(entityType, data) {
+            const response = await fetch(`${API_BASE_URL}/api/${entityType}s`, {
+                method: \'POST\',
+                headers: { \'Content-Type\': \'application/json\' },
+                body: JSON.stringify(data)
+            });
+            return response.json();
+        }
+
+        async function updateData(entityType, id, data) {
+            const response = await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`, {
+                method: \'PUT\',
+                headers: { \'Content-Type\': \'application/json\' },
+                body: JSON.stringify(data)
+            });
+            return response.json();
+        }
+
+        async function deleteData(entityType, id) {
+            await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`, {
+                method: \'DELETE\'
+            });
+        }
+
+        // Funções para renderizar listas
+        async function renderList(entityType) {
+            const listElement = document.getElementById(`${entityType}-list`);
+            listElement.innerHTML = \'\';
+            const items = await fetchData(entityType);
+            items.forEach(item => {
+                const li = document.createElement(\'li\');
+                let displayText = \'\';
+                switch (entityType) {
+                    case \'blog\': displayText = item.title; break;
+                    case \'video\': displayText = item.title; break;
+                    case \'course_ebook\': displayText = item.title; break;
+                    case \'testimonial\': displayText = item.author; break;
+                    case \'team_member\': displayText = item.name; break;
+                    case \'faq\': displayText = item.question; break;
+                }
+                li.innerHTML = `\n                    <span>${displayText}</span>\n                    <div>\n                        <button class=\"edit-button\" onclick=\"editItem(\'${entityType}\', ${item.id})\">Editar</button>\n                        <button onclick=\"deleteItem(\'${entityType}\', ${item.id})\">Excluir</button>\n                    </div>\n                `;
+                listElement.appendChild(li);
+            });
+        }
+
+        // Funções do Modal
+        function openModal(entityType, item = null) {
+            currentEntityType = entityType;
+            currentEditId = item ? item.id : null;
+            const modal = document.getElementById(\'myModal\');
+            const modalTitle = document.getElementById(\'modal-title\');
+            const modalForm = document.getElementById(\'modal-form\');
+            const submitButton = document.getElementById(\'submit-button\');
+
+            modalForm.innerHTML = \'\'; // Limpa formulário anterior
+
+            let fields = [];
+            switch (entityType) {
+                case \'blog\':
+                    modalTitle.innerText = item ? \'Editar Blog\' : \'Novo Blog\';
+                    submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Blog\';
+                    fields = [
+                        { name: \'title\', label: \'Título\', type: \'text\', required: true },
+                        { name: \'content\', label: \'Conteúdo\', type: \'textarea\', required: true }
+                    ];
+                    break;
+                case \'video\':
+                    modalTitle.innerText = item ? \'Editar Vídeo\' : \'Novo Vídeo\';
+                    submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Vídeo\';
+                    fields = [
+                        { name: \'title\', label: \'Título\', type: \'text\', required: true },
+                        { name: \'description\', label: \'Descrição\', type: \'textarea\', required: false },
+                        { name: \'url\', label: \'URL do Vídeo\', type: \'url\', required: true },
+                        { name: \'duration\', label: \'Duração (minutos)\' , type: \'number\', required: false }
+                    ];
+                    break;
+                case \'course_ebook\':
+                    modalTitle.innerText = item ? \'Editar Curso/E-book\' : \'Novo Curso/E-book\';
+                    submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Curso/E-book\';
+                    fields = [
+                        { name: \'title\', label: \'Título\', type: \'text\', required: true },
+                        { name: \'description\', label: \'Descrição\', type: \'textarea\', required: false },
+                        { name: \'price\', label: \'Preço\', type: \'number\', required: false },
+                        { name: \'file_url\', label: \'URL do Arquivo\', type: \'url\', required: false }
+                    ];
+                    break;
+                case \'testimonial\':
+                    modalTitle.innerText = item ? \'Editar Depoimento\' : \'Novo Depoimento\';
+                    submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Depoimento\';
+                    fields = [
+                        { name: \'author\', label: \'Autor\', type: \'text\', required: true },
+                        { name: \'text\', label: \'Texto do Depoimento\', type: \'textarea\', required: true }
+                    ];
+                    break;
+                case \'team_member\':
+                    modalTitle.innerText = item ? \'Editar Membro da Equipe\' : \'Novo Membro da Equipe\';
+                    submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar Membro\';
+                    fields = [
+                        { name: \'name\', label: \'Nome\', type: \'text\', required: true },
+                        { name: \'role\', label: \'Cargo\', type: \'text\', required: true },
+                        { name: \'bio\', label: \'Bio\', type: \'textarea\', required: false },
+                        { name: \'image_url\', label: \'URL da Imagem\', type: \'url\', required: false }
+                    ];
+                    break;
+                case \'faq\':
+                    modalTitle.innerText = item ? \'Editar FAQ\' : \'Nova FAQ\';
+                    submitButton.innerText = item ? \'Salvar Alterações\' : \'Adicionar FAQ\';
+                    fields = [
+                        { name: \'question\', label: \'Pergunta\', type: \'text\', required: true },
+                        { name: \'answer\', label: \'Resposta\', type: \'textarea\', required: true }
+                    ];
+                    break;
+            }
+
+            fields.forEach(field => {
+                const formGroup = document.createElement(\'div\');
+                formGroup.classList.add(\'form-group\');
+                const label = document.createElement(\'label\');
+                label.setAttribute(\'for\', field.name);
+                label.innerText = field.label;
+                formGroup.appendChild(label);
+
+                let inputElement;
+                if (field.type === \'textarea\') {
+                    inputElement = document.createElement(\'textarea\');
+                    inputElement.rows = 5;
+                } else {
+                    inputElement = document.createElement(\'input\');
+                    inputElement.type = field.type;
+                }
+                inputElement.id = field.name;
+                inputElement.name = field.name;
+                inputElement.required = field.required;
+                if (item) {
+                    inputElement.value = item[field.name] !== undefined ? item[field.name] : \'\';
+                }
+                formGroup.appendChild(inputElement);
+                modalForm.insertBefore(formGroup, submitButton.parentNode);
+            });
+
+            modal.style.display = \'block\';
+        }
+
+        async function editItem(entityType, id) {
+            const item = await (await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`)).json();
+            openModal(entityType, item);
+        }
+
+        async function deleteItem(entityType, id) {
+            if (confirm(\'Tem certeza que deseja excluir este item?\')) {
+                await deleteData(entityType, id);
+                renderAllLists();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById(\'myModal\').style.display = \'none\';
+            document.getElementById(\'modal-form\').reset();
+            currentEditId = null;
+        }
+
+        document.getElementById(\'modal-form\').addEventListener(\'submit\', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            if (currentEditId) {
+                await updateData(currentEntityType, currentEditId, data);
+            } else {
+                await addData(currentEntityType, data);
+            }
+            closeModal();
+            renderAllLists();
+        });
+
+        async function renderAllLists() {
+            await renderList(\'blog\');
+            await renderList(\'video\');
+            await renderList(\'course_ebook\');
+            await renderList(\'testimonial\');
+            await renderList(\'team_member\');
+            await renderList(\'faq\');
+        }
+
+        // Inicialização
+        window.onload = async () => {
+            await loadApiStatus();
+            await renderAllLists();
+        };
+    </script>
+</body>
+</html>
+
