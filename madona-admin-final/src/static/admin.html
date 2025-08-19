@@ -97,6 +97,7 @@
             <h2 id="modal-title"></h2>
             <form id="modal-form">
                 <!-- Campos do formulário serão injetados aqui -->
+                <div id="form-fields-container"></div>
                 <div class="form-actions">
                     <button type="submit" id="submit-button"></button>
                 </div>
@@ -106,7 +107,7 @@
 
     <script>
         const API_BASE_URL = window.location.origin;
-        let currentEntityType = '';
+        let currentEntityType = "";
         let currentEditId = null;
 
         // Função para carregar o status da API
@@ -114,10 +115,10 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/status`);
                 const data = await response.json();
-                document.getElementById('api-status').innerText = data.status;
+                document.getElementById("api-status").innerText = data.status;
             } catch (error) {
-                console.error('Erro ao carregar status da API:', error);
-                document.getElementById('api-status').innerText = 'Erro ao carregar status.';
+                console.error("Erro ao carregar status da API:", error);
+                document.getElementById("api-status").innerText = "Erro ao carregar status.";
             }
         };
 
@@ -129,8 +130,8 @@
 
         window.addData = async function(entityType, data) {
             const response = await fetch(`${API_BASE_URL}/api/${entityType}s`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
             return response.json();
@@ -138,8 +139,8 @@
 
         window.updateData = async function(entityType, id, data) {
             const response = await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
             return response.json();
@@ -147,25 +148,25 @@
 
         window.deleteData = async function(entityType, id) {
             await fetch(`${API_BASE_URL}/api/${entityType}s/${id}`, {
-                method: 'DELETE'
+                method: "DELETE"
             });
         };
 
         // Funções para renderizar listas
         window.renderList = async function(entityType) {
             const listElement = document.getElementById(`${entityType}-list`);
-            listElement.innerHTML = '';
+            listElement.innerHTML = "";
             const items = await window.fetchData(entityType);
             items.forEach(item => {
-                const li = document.createElement('li');
-                let displayText = '';
+                const li = document.createElement("li");
+                let displayText = "";
                 switch (entityType) {
-                    case 'blog': displayText = item.title; break;
-                    case 'video': displayText = item.title; break;
-                    case 'course_ebook': displayText = item.title; break;
-                    case 'testimonial': displayText = item.author; break;
-                    case 'team_member': displayText = item.name; break;
-                    case 'faq': displayText = item.question; break;
+                    case "blog": displayText = item.title; break;
+                    case "video": displayText = item.title; break;
+                    case "course_ebook": displayText = item.title; break;
+                    case "testimonial": displayText = item.author; break;
+                    case "team_member": displayText = item.name; break;
+                    case "faq": displayText = item.question; break;
                 }
                 li.innerHTML = `
                     <span>${displayText}</span>
@@ -178,16 +179,16 @@
             });
 
             // Adicionar event listeners para os botões de editar e excluir
-            listElement.querySelectorAll('.edit-button').forEach(button => {
-                button.addEventListener('click', (event) => {
+            listElement.querySelectorAll(".edit-button").forEach(button => {
+                button.addEventListener("click", (event) => {
                     const entityType = event.target.dataset.entityType;
                     const id = event.target.dataset.id;
                     window.editItem(entityType, id);
                 });
             });
-            listElement.querySelectorAll('button:not(.edit-button)').forEach(button => {
-                if (button.innerText === 'Excluir') {
-                    button.addEventListener('click', (event) => {
+            listElement.querySelectorAll("button:not(.edit-button)").forEach(button => {
+                if (button.innerText === "Excluir") {
+                    button.addEventListener("click", (event) => {
                         const entityType = event.target.dataset.entityType;
                         const id = event.target.dataset.id;
                         window.deleteItem(entityType, id);
@@ -197,110 +198,110 @@
         };
 
         window.renderAllLists = async function() {
-            await window.renderList('blog');
-            await window.renderList('video');
-            await window.renderList('course_ebook');
-            await window.renderList('testimonial');
-            await window.renderList('team_member');
-            await window.renderList('faq');
+            await window.renderList("blog");
+            await window.renderList("video");
+            await window.renderList("course_ebook");
+            await window.renderList("testimonial");
+            await window.renderList("team_member");
+            await window.renderList("faq");
         };
 
         // Funções do Modal
         window.openModal = function(entityType, item = null) {
             currentEntityType = entityType;
             currentEditId = item ? item.id : null;
-            const modal = document.getElementById('myModal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalForm = document.getElementById('modal-form');
-            const submitButton = document.getElementById('submit-button');
+            const modal = document.getElementById("myModal");
+            const modalTitle = document.getElementById("modal-title");
+            const formFieldsContainer = document.getElementById("form-fields-container");
+            const submitButton = document.getElementById("submit-button");
 
-            modalForm.innerHTML = ''; // Limpa formulário anterior
+            formFieldsContainer.innerHTML = ""; // Limpa formulário anterior
 
             let fields = [];
             switch (entityType) {
-                case 'blog':
-                    modalTitle.innerText = item ? 'Editar Blog' : 'Novo Blog';
-                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Blog';
+                case "blog":
+                    modalTitle.innerText = item ? "Editar Blog" : "Novo Blog";
+                    submitButton.innerText = item ? "Salvar Alterações" : "Adicionar Blog";
                     fields = [
-                        { name: 'title', label: 'Título', type: 'text', required: true },
-                        { name: 'content', label: 'Conteúdo', type: 'textarea', required: true }
+                        { name: "title", label: "Título", type: "text", required: true },
+                        { name: "content", label: "Conteúdo", type: "textarea", required: true }
                     ];
                     break;
-                case 'video':
-                    modalTitle.innerText = item ? 'Editar Vídeo' : 'Novo Vídeo';
-                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Vídeo';
+                case "video":
+                    modalTitle.innerText = item ? "Editar Vídeo" : "Novo Vídeo";
+                    submitButton.innerText = item ? "Salvar Alterações" : "Adicionar Vídeo";
                     fields = [
-                        { name: 'title', label: 'Título', type: 'text', required: true },
-                        { name: 'description', label: 'Descrição', type: 'textarea', required: false },
-                        { name: 'url', label: 'URL do Vídeo', type: 'url', required: true },
-                        { name: 'duration', label: 'Duração (minutos)' , type: 'number', required: false }
+                        { name: "title", label: "Título", type: "text", required: true },
+                        { name: "description", label: "Descrição", type: "textarea", required: false },
+                        { name: "url", label: "URL do Vídeo", type: "url", required: true },
+                        { name: "duration", label: "Duração (minutos)" , type: "number", required: false }
                     ];
                     break;
-                case 'course_ebook':
-                    modalTitle.innerText = item ? 'Editar Curso/E-book' : 'Novo Curso/E-book';
-                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Curso/E-book';
+                case "course_ebook":
+                    modalTitle.innerText = item ? "Editar Curso/E-book" : "Novo Curso/E-book";
+                    submitButton.innerText = item ? "Salvar Alterações" : "Adicionar Curso/E-book";
                     fields = [
-                        { name: 'title', label: 'Título', type: 'text', required: true },
-                        { name: 'description', label: 'Descrição', type: 'textarea', required: false },
-                        { name: 'price', label: 'Preço', type: 'number', required: false },
-                        { name: 'file_url', label: 'URL do Arquivo', type: 'url', required: false }
+                        { name: "title", label: "Título", type: "text", required: true },
+                        { name: "description", label: "Descrição", type: "textarea", required: false },
+                        { name: "price", label: "Preço", type: "number", required: false },
+                        { name: "file_url", label: "URL do Arquivo", type: "url", required: false }
                     ];
                     break;
-                case 'testimonial':
-                    modalTitle.innerText = item ? 'Editar Depoimento' : 'Novo Depoimento';
-                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Depoimento';
+                case "testimonial":
+                    modalTitle.innerText = item ? "Editar Depoimento" : "Novo Depoimento";
+                    submitButton.innerText = item ? "Salvar Alterações" : "Adicionar Depoimento";
                     fields = [
-                        { name: 'author', label: 'Autor', type: 'text', required: true },
-                        { name: 'text', label: 'Texto do Depoimento', type: 'textarea', required: true }
+                        { name: "author", label: "Autor", type: "text", required: true },
+                        { name: "text", label: "Texto do Depoimento", type: "textarea", required: true }
                     ];
                     break;
-                case 'team_member':
-                    modalTitle.innerText = item ? 'Editar Membro da Equipe' : 'Novo Membro da Equipe';
-                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar Membro';
+                case "team_member":
+                    modalTitle.innerText = item ? "Editar Membro da Equipe" : "Novo Membro da Equipe";
+                    submitButton.innerText = item ? "Salvar Alterações" : "Adicionar Membro";
                     fields = [
-                        { name: 'name', label: 'Nome', type: 'text', required: true },
-                        { name: 'role', label: 'Cargo', type: 'text', required: true },
-                        { name: 'bio', label: 'Bio', type: 'textarea', required: false },
-                        { name: 'image_url', label: 'URL da Imagem', type: 'url', required: false }
+                        { name: "name", label: "Nome", type: "text", required: true },
+                        { name: "role", label: "Cargo", type: "text", required: true },
+                        { name: "bio", label: "Bio", type: "textarea", required: false },
+                        { name: "image_url", label: "URL da Imagem", type: "url", required: false }
                     ];
                     break;
-                case 'faq':
-                    modalTitle.innerText = item ? 'Editar FAQ' : 'Nova FAQ';
-                    submitButton.innerText = item ? 'Salvar Alterações' : 'Adicionar FAQ';
+                case "faq":
+                    modalTitle.innerText = item ? "Editar FAQ" : "Nova FAQ";
+                    submitButton.innerText = item ? "Salvar Alterações" : "Adicionar FAQ";
                     fields = [
-                        { name: 'question', label: 'Pergunta', type: 'text', required: true },
-                        { name: 'answer', label: 'Resposta', type: 'textarea', required: true }
+                        { name: "question", label: "Pergunta", type: "text", required: true },
+                        { name: "answer", label: "Resposta", type: "textarea", required: true }
                     ];
                     break;
             }
 
             fields.forEach(field => {
-                const formGroup = document.createElement('div');
-                formGroup.classList.add('form-group');
-                const label = document.createElement('label');
-                label.setAttribute('for', field.name);
+                const formGroup = document.createElement("div");
+                formGroup.classList.add("form-group");
+                const label = document.createElement("label");
+                label.setAttribute("for", field.name);
                 label.innerText = field.label;
                 formGroup.appendChild(label);
 
                 let inputElement;
-                if (field.type === 'textarea') {
-                    inputElement = document.createElement('textarea');
+                if (field.type === "textarea") {
+                    inputElement = document.createElement("textarea");
                     inputElement.rows = 5;
                 } else {
-                    inputElement = document.createElement('input');
+                    inputElement = document.createElement("input");
                     inputElement.type = field.type;
                 }
                 inputElement.id = field.name;
                 inputElement.name = field.name;
                 inputElement.required = field.required;
                 if (item) {
-                    inputElement.value = item[field.name] !== undefined ? item[field.name] : '';
+                    inputElement.value = item[field.name] !== undefined ? item[field.name] : "";
                 }
                 formGroup.appendChild(inputElement);
-                modalForm.insertBefore(formGroup, submitButton.parentNode);
+                formFieldsContainer.appendChild(formGroup);
             });
 
-            modal.style.display = 'block';
+            modal.style.display = "block";
         };
 
         window.editItem = async function(entityType, id) {
@@ -309,19 +310,19 @@
         };
 
         window.deleteItem = async function(entityType, id) {
-            if (confirm('Tem certeza que deseja excluir este item?')) {
+            if (confirm("Tem certeza que deseja excluir este item?")) {
                 await window.deleteData(entityType, id);
                 window.renderAllLists();
             }
         };
 
         window.closeModal = function() {
-            document.getElementById('myModal').style.display = 'none';
-            document.getElementById('modal-form').reset();
+            document.getElementById("myModal").style.display = "none";
+            document.getElementById("modal-form").reset();
             currentEditId = null;
         };
 
-        document.getElementById('modal-form').addEventListener('submit', async (event) => {
+        document.getElementById("modal-form").addEventListener("submit", async (event) => {
             event.preventDefault();
             const formData = new FormData(event.target);
             const data = {};
@@ -339,18 +340,18 @@
         });
 
         // Inicialização
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             await window.loadApiStatus();
             await window.renderAllLists();
 
             // Adicionar event listeners para os botões de abrir modal
-            document.getElementById('add-blog-btn').addEventListener('click', () => window.openModal('blog'));
-            document.getElementById('add-video-btn').addEventListener('click', () => window.openModal('video'));
-            document.getElementById('add-course-ebook-btn').addEventListener('click', () => window.openModal('course_ebook'));
-            document.getElementById('add-testimonial-btn').addEventListener('click', () => window.openModal('testimonial'));
-            document.getElementById('add-team-member-btn').addEventListener('click', () => window.openModal('team_member'));
-            document.getElementById('add-faq-btn').addEventListener('click', () => window.openModal('faq'));
-            document.getElementById('close-modal-btn').addEventListener('click', () => window.closeModal());
+            document.getElementById("add-blog-btn").addEventListener("click", () => window.openModal("blog"));
+            document.getElementById("add-video-btn").addEventListener("click", () => window.openModal("video"));
+            document.getElementById("add-course-ebook-btn").addEventListener("click", () => window.openModal("course_ebook"));
+            document.getElementById("add-testimonial-btn").addEventListener("click", () => window.openModal("testimonial"));
+            document.getElementById("add-team-member-btn").addEventListener("click", () => window.openModal("team_member"));
+            document.getElementById("add-faq-btn").addEventListener("click", () => window.openModal("faq"));
+            document.getElementById("close-modal-btn").addEventListener("click", () => window.closeModal());
         });
     </script>
 </body>
