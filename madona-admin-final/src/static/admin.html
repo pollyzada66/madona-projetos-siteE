@@ -342,19 +342,20 @@
         // Inicialização
         document.addEventListener("DOMContentLoaded", async () => {
             await window.loadApiStatus();
-            await window.renderAllLists();
+            window.renderAllLists();
 
-            // Adicionar event listeners para os botões de abrir modal
+            // Adicionar event listeners para os botões de adicionar
             document.getElementById("add-blog-btn").addEventListener("click", () => window.openModal("blog"));
             document.getElementById("add-video-btn").addEventListener("click", () => window.openModal("video"));
             document.getElementById("add-course-ebook-btn").addEventListener("click", () => window.openModal("course_ebook"));
             document.getElementById("add-testimonial-btn").addEventListener("click", () => window.openModal("testimonial"));
             document.getElementById("add-team-member-btn").addEventListener("click", () => window.openModal("team_member"));
             document.getElementById("add-faq-btn").addEventListener("click", () => window.openModal("faq"));
-            document.getElementById("close-modal-btn").addEventListener("click", () => window.closeModal());
+
+            // Adicionar event listener para o botão de fechar modal
+            document.getElementById("close-modal-btn").addEventListener("click", window.closeModal);
         });
     </script>
 </body>
 </html>
-
 
