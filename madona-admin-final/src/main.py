@@ -7,7 +7,10 @@ app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'sta
 CORS(app)
 
 # Configuração do banco de dados SQLite
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL").replace("postgresql://", "postgresql+psycopg2://")
+db_url = os.environ.get("DATABASE_URL")
+if db_url and db_url.startswith("https://"):
+    db_url = db_url.replace("https://", "postgresql+psycopg2://")
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
