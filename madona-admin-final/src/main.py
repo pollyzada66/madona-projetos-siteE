@@ -7,7 +7,7 @@ app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'sta
 CORS(app)
 
 # Configuração do banco de dados SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///madona.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -125,7 +125,7 @@ def admin_html():
 
 @app.route('/api/status')
 def status():
-    return jsonify({'status': 'Painel de Administração com DB SQLite Online!'})
+    return jsonify({'status': 'Painel de Administração com DB PostgreSQL Online!'})
 
 # Rotas para Blogs
 @app.route('/api/blogs', methods=['GET'])
@@ -315,6 +315,10 @@ def delete_faq(f_id):
 
 # Cria o banco de dados se não existir
 with app.app_context():
+    # Verifica se as tabelas já existem antes de criar
+    # Isso é importante para evitar a recriação de tabelas em um banco de dados existente
+    # Em um ambiente de produção, você usaria ferramentas de migração como Flask-Migrate
+    # ou Alembic para gerenciar as alterações do esquema do banco de dados.
     db.create_all()
 
 if __name__ == '__main__':
